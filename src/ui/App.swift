@@ -95,6 +95,7 @@ class App: AppCenterApplication {
     func hideThumbnailPanelWithoutChangingKeyWindow() {
         preferencesWindow.canBecomeKey_ = false
         feedbackWindow.canBecomeKey_ = false
+        thumbnailsPanel.previewWindow?.orderOut(nil)
         thumbnailsPanel.orderOut(nil)
         preferencesWindow.canBecomeKey_ = true
         feedbackWindow.canBecomeKey_ = true
@@ -206,9 +207,11 @@ class App: AppCenterApplication {
     }
 
     func refreshOpenUi(_ windowsToScreenshot: [Window], _ source: RefreshCausedBy) {
+        // Load thumbnails if: not hiding them, OR preview is enabled, OR in Titles mode (for side preview)
+        let shouldLoadThumbnails = !Appearance.hideThumbnails || Preferences.previewFocusedWindow || Preferences.appearanceStyle == .titles
         if !windowsToScreenshot.isEmpty && SystemPermissions.screenRecordingPermission == .granted
                && !Preferences.onlyShowApplications()
-               && (!Appearance.hideThumbnails || Preferences.previewFocusedWindow) {
+               && shouldLoadThumbnails {
             Windows.refreshThumbnails(windowsToScreenshot, source)
             if source == .refreshOnlyThumbnailsAfterShowUi { return }
         }

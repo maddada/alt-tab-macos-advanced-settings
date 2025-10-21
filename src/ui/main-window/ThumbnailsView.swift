@@ -37,6 +37,8 @@ class ThumbnailsView: NSVisualEffectView {
         if view.frame != NSRect.zero {
             view.drawHighlight()
         }
+        // Update preview when selection changes
+        App.app.thumbnailsPanel?.updatePreview()
     }
 
     /// using layer!.cornerRadius works but the corners are aliased; this custom approach gives smooth rounded corners
@@ -118,6 +120,7 @@ class ThumbnailsView: NSVisualEffectView {
                 }
             }
             highlightStartView()
+            App.app.thumbnailsPanel?.updatePreview()
         }
     }
 
@@ -182,6 +185,7 @@ class ThumbnailsView: NSVisualEffectView {
         let heightMax = ThumbnailsPanel.maxThumbnailsHeight()
         ThumbnailsView.thumbnailsWidth = min(maxX, widthMax)
         ThumbnailsView.thumbnailsHeight = min(maxY, heightMax)
+
         let frameWidth = ThumbnailsView.thumbnailsWidth + Appearance.windowPadding * 2
         var frameHeight = ThumbnailsView.thumbnailsHeight + Appearance.windowPadding * 2
         let originX = Appearance.windowPadding
@@ -242,6 +246,7 @@ class ThumbnailsView: NSVisualEffectView {
             }
         }
     }
+
 }
 
 class ScrollView: NSScrollView {
