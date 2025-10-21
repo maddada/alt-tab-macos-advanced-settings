@@ -87,7 +87,9 @@ extension NSScreen {
         let panelFrame = window.frame
         let x = screenFrame.minX + max(screenFrame.width - panelFrame.width, 0) * 0.5
         let y = screenFrame.minY + max(screenFrame.height - panelFrame.height, 0) * 0.5
-        window.setFrameOrigin(NSPoint(x: x, y: y))
+        // Apply vertical offset as a percentage of screen height
+        let verticalOffset = CGFloat(Preferences.windowVerticalOffset) / 100.0 * screenFrame.height
+        window.setFrameOrigin(NSPoint(x: x, y: y + verticalOffset))
     }
 }
 

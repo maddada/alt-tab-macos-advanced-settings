@@ -88,6 +88,9 @@ class Preferences {
         "hideThumbnails": "false",
         "previewFocusedWindow": "false",
         "screenRecordingPermissionSkipped": "false",
+        "windowMaxWidthPercentage": "80",
+        "windowMaxHeightPercentage": "80",
+        "windowVerticalOffset": "0",
     ]
 
     // system preferences
@@ -124,6 +127,9 @@ class Preferences {
     static var blacklist: [BlacklistEntry] { CachedUserDefaults.json("blacklist", [BlacklistEntry].self) }
     static var previewFocusedWindow: Bool { CachedUserDefaults.bool("previewFocusedWindow") }
     static var screenRecordingPermissionSkipped: Bool { CachedUserDefaults.bool("screenRecordingPermissionSkipped") }
+    static var windowMaxWidthPercentage: Int { CachedUserDefaults.int("windowMaxWidthPercentage") }
+    static var windowMaxHeightPercentage: Int { CachedUserDefaults.int("windowMaxHeightPercentage") }
+    static var windowVerticalOffset: Int { CachedUserDefaults.int("windowVerticalOffset") }
 
     // macro values
     static var appearanceStyle: AppearanceStylePreference { CachedUserDefaults.macroPref("appearanceStyle", AppearanceStylePreference.allCases) }

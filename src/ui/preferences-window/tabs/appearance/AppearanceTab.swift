@@ -399,6 +399,16 @@ class AppearanceTab: NSObject {
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceTheme", AppearanceThemePreference.allCases, segmentWidth: 100)])
         table.addRow(leftText: NSLocalizedString("Visibility", comment: ""),
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceVisibility", AppearanceVisibilityPreference.allCases, segmentWidth: 100)])
+        table.addRow(leftText: NSLocalizedString("Max width", comment: ""),
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxWidthPercentage", 5, 100, 20, true, "%", extraAction: { _ in
+                Appearance.update()
+            }))
+        table.addRow(leftText: NSLocalizedString("Max height", comment: ""),
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxHeightPercentage", 5, 100, 20, true, "%", extraAction: { _ in
+                Appearance.update()
+            }))
+        table.addRow(leftText: NSLocalizedString("Vertical offset", comment: ""),
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowVerticalOffset", -50, 50, 21, true, "%"))
         table.addRow(rightViews: customizeStyleButton)
         table.fit()
         return table

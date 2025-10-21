@@ -335,6 +335,8 @@ class LabelAndControl: NSObject {
         let suffix = NSTextField(labelWithString: text)
         suffix.textColor = .gray
         suffix.identifier = NSUserInterfaceItemIdentifier(controlName + ControlIdentifierDiscriminator.SUFFIX.rawValue)
+        suffix.translatesAutoresizingMaskIntoConstraints = false
+        suffix.addOrUpdateConstraint(suffix.widthAnchor, 45)
         return suffix
     }
 
@@ -367,7 +369,7 @@ class LabelAndControl: NSObject {
             view.identifier?.rawValue == control.identifier!.rawValue + ControlIdentifierDiscriminator.SUFFIX.rawValue
         }
         if let suffixView: NSTextField = control.superview?.subviews.first(where: suffixIdentifierPredicate) as? NSTextField {
-            let regex = try! NSRegularExpression(pattern: "^[0-9]+") // first decimal
+            let regex = try! NSRegularExpression(pattern: "^-?[0-9]+") // first decimal (with optional negative sign)
             let range = NSMakeRange(0, suffixView.stringValue.count)
             suffixView.stringValue = regex.stringByReplacingMatches(in: suffixView.stringValue, range: range, withTemplate: value)
         }
