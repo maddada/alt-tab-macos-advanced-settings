@@ -5,6 +5,7 @@ class Windows {
     static var focusedWindowIndex = Int(0)
     static var hoveredWindowIndex: Int?
     private static var lastWindowActivityType = WindowActivityType.none
+    static var filterText = ""
 
     /// Updates windows "lastFocusOrder" to ensure unique values based on window z-order.
     /// Windows are ordered by their position in Spaces.windowsInSpaces() results,
@@ -356,8 +357,8 @@ class Windows {
         }
     }
 
-    private static func refreshIfWindowShouldBeShownToTheUser(_ window: Window) {
-        window.shouldShowTheUser =
+    static func refreshIfWindowShouldBeShownToTheUser(_ window: Window) {
+        let passesDefaultFilters =
             !(window.application.bundleIdentifier.flatMap { id in
                 Preferences.blacklist.contains {
                     id.hasPrefix($0.bundleIdentifier) &&
@@ -374,6 +375,34 @@ class Windows {
                 !(Preferences.spacesToShow[App.app.shortcutIndex] == .visible && !Spaces.visibleSpaces.contains { visibleSpace in window.spaceIds.contains { $0 == visibleSpace } }) &&
                 !(Preferences.screensToShow[App.app.shortcutIndex] == .showingAltTab && !window.isOnScreen(NSScreen.preferred)) &&
                 (Preferences.showTabsAsWindows || !window.isTabbed))
+
+        // Apply fuzzy search filter if search text is present
+        let passesSearchFilter = filterText.isEmpty || fuzzyMatch(window, filterText)
+
+        window.shouldShowTheUser = passesDefaultFilters && passesSearchFilter
+    }
+
+    private static func fuzzyMatch(_ window: Window, _ searchText: String) -> Bool {
+        let search = searchText.lowercased()
+        let appName = window.application.localizedName?.lowercased() ?? ""
+        let windowTitle = window.title?.lowercased() ?? ""
+
+        // Simple fuzzy match: check if all characters in search appear in order
+        return fuzzyMatchString(appName, search) || fuzzyMatchString(windowTitle, search)
+    }
+
+    private static func fuzzyMatchString(_ text: String, _ pattern: String) -> Bool {
+        var textIndex = text.startIndex
+        var patternIndex = pattern.startIndex
+
+        while textIndex < text.endIndex && patternIndex < pattern.endIndex {
+            if text[textIndex] == pattern[patternIndex] {
+                patternIndex = pattern.index(after: patternIndex)
+            }
+            textIndex = text.index(after: textIndex)
+        }
+
+        return patternIndex == pattern.endIndex
     }
 
     /// Selects the most appropriate main window from a given list of windows.

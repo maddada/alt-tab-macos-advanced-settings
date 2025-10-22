@@ -76,6 +76,7 @@ class App: AppCenterApplication {
         isFirstSummon = true
         forceDoNothingOnRelease = false
         MouseEvents.toggle(false)
+        thumbnailsPanel.clearSearchField()
         hideThumbnailPanelWithoutChangingKeyWindow()
         if !keepPreview {
             previewPanel.orderOut(nil)
@@ -125,6 +126,7 @@ class App: AppCenterApplication {
         guard appIsBeingUsed else { return } // already hidden
         let focusedWindow = Windows.focusedWindow()
         Logger.info(focusedWindow?.debugId)
+        thumbnailsPanel.clearSearchField()
         focusSelectedWindow(focusedWindow)
     }
 
@@ -224,10 +226,7 @@ class App: AppCenterApplication {
         guard appIsBeingUsed else { return }
         thumbnailsPanel.thumbnailsView.updateItemsAndLayout()
         guard appIsBeingUsed else { return }
-        thumbnailsPanel.setContentSize(thumbnailsPanel.thumbnailsView.frame.size)
-        thumbnailsPanel.display()
-        guard appIsBeingUsed else { return }
-        NSScreen.preferred.repositionPanel(thumbnailsPanel)
+        thumbnailsPanel.updateLayout()
         guard appIsBeingUsed else { return }
         Windows.voiceOverWindow() // at this point ThumbnailViews are assigned to the window, and ready
         guard appIsBeingUsed else { return }

@@ -16,6 +16,10 @@ func handleKeyboardEvent(_ globalId: Int?, _ shortcutState: ShortcutState?, _ ke
     Logger.debug(globalId, shortcutState, keyCode, modifiers, isARepeat, NSEvent.modifierFlags)
     var someShortcutTriggered = false
     for shortcut in ControlsTab.shortcuts.values {
+        // Skip letter-based shortcuts when search field is active
+        if ThumbnailsPanel.isSearchFieldActive && shortcut.isLetterBasedShortcut() {
+            continue
+        }
         if shortcut.matches(globalId, shortcutState, keyCode, modifiers) && shortcut.shouldTrigger() {
             shortcut.executeAction(isARepeat)
             // we want to pass-through alt-up to the active app, since it saw alt-down previously

@@ -15,6 +15,14 @@ extension NSAppearance {
 
 extension NSColor {
     // periphery:ignore
+    convenience init(hex: Int, alpha: CGFloat = 1.0) {
+        let red = CGFloat((hex >> 16) & 0xFF) / 255.0
+        let green = CGFloat((hex >> 8) & 0xFF) / 255.0
+        let blue = CGFloat(hex & 0xFF) / 255.0
+        self.init(srgbRed: red, green: green, blue: blue, alpha: alpha)
+    }
+
+    // periphery:ignore
     func toHex() -> String? {
         guard let rgbColor = usingColorSpace(.deviceRGB) else {
             return nil

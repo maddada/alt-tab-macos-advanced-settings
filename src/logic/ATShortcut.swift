@@ -75,6 +75,40 @@ class ATShortcut {
         ControlsTab.executeAction(id)
     }
 
+    func isLetterBasedShortcut() -> Bool {
+        // Letter key codes in macOS (A-Z) using carbon key codes
+        // Check if the shortcut uses a letter key
+        let letterCarbonKeyCodes: Set<UInt32> = [
+            0,  // A
+            1,  // S
+            2,  // D
+            3,  // F
+            4,  // H
+            5,  // G
+            6,  // Z
+            7,  // X
+            8,  // C
+            9,  // V
+            11, // B
+            12, // Q
+            13, // W
+            14, // E
+            15, // R
+            16, // Y
+            17, // T
+            31, // O
+            32, // U
+            34, // I
+            35, // P
+            37, // L
+            38, // J
+            40, // K
+            45, // N
+            46, // M
+        ]
+        return letterCarbonKeyCodes.contains(shortcut.carbonKeyCode)
+    }
+
     /// keyboard events can be unreliable. They can arrive in the wrong order, or may never arrive
     /// this function acts as a safety net to improve the chances that some keyUp behaviors are enforced
     func redundantSafetyMeasures() {

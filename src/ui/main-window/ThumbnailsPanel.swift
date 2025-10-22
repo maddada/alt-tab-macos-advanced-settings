@@ -1,11 +1,58 @@
 import Cocoa
 
+class VerticalCenteredTextField: NSTextField {
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+    }
+
+    override var intrinsicContentSize: NSSize {
+        var size = super.intrinsicContentSize
+        size.height = self.frame.height
+        return size
+    }
+
+    override class var cellClass: AnyClass? {
+        get { return VerticalCenteredTextFieldCell.self }
+        set {}
+    }
+}
+
+class VerticalCenteredTextFieldCell: NSTextFieldCell {
+    override func drawingRect(forBounds rect: NSRect) -> NSRect {
+        let newRect = NSRect(x: 0, y: (rect.size.height - 22) / 2, width: rect.size.width, height: 22)
+        return super.drawingRect(forBounds: newRect)
+    }
+
+    override func select(withFrame rect: NSRect, in controlView: NSView, editor textObj: NSText, delegate: Any?, start selStart: Int, length selLength: Int) {
+        let newRect = NSRect(x: 0, y: (rect.size.height - 22) / 2, width: rect.size.width, height: 22)
+        super.select(withFrame: newRect, in: controlView, editor: textObj, delegate: delegate, start: selStart, length: selLength)
+    }
+
+    override func edit(withFrame rect: NSRect, in controlView: NSView, editor textObj: NSText, delegate: Any?, event: NSEvent?) {
+        let newRect = NSRect(x: 0, y: (rect.size.height - 22) / 2, width: rect.size.width, height: 22)
+        super.edit(withFrame: newRect, in: controlView, editor: textObj, delegate: delegate, event: event)
+    }
+}
+
 class ThumbnailsPanel: NSPanel {
     var thumbnailsView = ThumbnailsView()
     var previewWindow: NSWindow?
     var previewView: NSImageView?
     var previewContainerView: NSView?
+    var searchField: NSTextField?
+    var searchContainerView: NSView?
+    var containerView: NSView?
     override var canBecomeKey: Bool { true }
+
+    static var isSearchFieldActive: Bool {
+        if let panel = App.app.thumbnailsPanel,
+           let searchField = panel.searchField,
+           let fieldEditor = panel.fieldEditor(false, for: searchField),
+           panel.firstResponder == fieldEditor {
+            return true
+        }
+        return false
+    }
 
     convenience init() {
         self.init(contentRect: .zero, styleMask: .nonactivatingPanel, backing: .buffered, defer: false)
@@ -16,7 +63,8 @@ class ThumbnailsPanel: NSPanel {
         hasShadow = Appearance.enablePanelShadow
         titleVisibility = .hidden
         backgroundColor = .clear
-        contentView! = thumbnailsView
+        setupSearchField()
+        setupContainerView()
         // triggering AltTab before or during Space transition animation brings the window on the Space post-transition
         collectionBehavior = .canJoinAllSpaces
         // 2nd highest level possible; this allows the app to go on top of context menus
@@ -27,6 +75,55 @@ class ThumbnailsPanel: NSPanel {
         // for VoiceOver
         setAccessibilityLabel(App.name)
         setupPreviewWindow()
+    }
+
+    private func setupSearchField() {
+        // Create the search text field with vertical centering
+        searchField = VerticalCenteredTextField(frame: .zero)
+        searchField?.placeholderString = "Search windows..."
+        searchField?.isBordered = false
+        searchField?.focusRingType = .none
+        searchField?.drawsBackground = false
+        searchField?.backgroundColor = .clear
+        searchField?.textColor = .white
+        searchField?.font = NSFont.systemFont(ofSize: 14)
+        searchField?.alignment = .center
+        searchField?.isEditable = true
+        searchField?.isSelectable = true
+        searchField?.delegate = self
+
+        // Center text vertically with custom cell
+        if let cell = searchField?.cell as? VerticalCenteredTextFieldCell {
+            cell.usesSingleLineMode = true
+            cell.wraps = false
+            cell.isScrollable = false
+        }
+
+        // Create a visual effect view container to match the thumbnails view
+        let visualEffectView = NSVisualEffectView(frame: .zero)
+        visualEffectView.material = Appearance.material
+        visualEffectView.blendingMode = .behindWindow
+        visualEffectView.state = .active
+        visualEffectView.wantsLayer = true
+        visualEffectView.layer?.cornerRadius = Appearance.windowCornerRadius
+        visualEffectView.layer?.masksToBounds = true
+
+        searchContainerView = visualEffectView
+
+        if let search = searchField, let container = searchContainerView {
+            container.addSubview(search)
+        }
+    }
+
+    private func setupContainerView() {
+        // Create a container view to hold both search field and thumbnails view
+        containerView = NSView(frame: .zero)
+
+        if let container = containerView, let searchContainer = searchContainerView {
+            container.addSubview(searchContainer)
+            container.addSubview(thumbnailsView)
+            contentView = container
+        }
     }
 
     private func setupPreviewWindow() {
@@ -184,9 +281,63 @@ class ThumbnailsPanel: NSPanel {
     func show() {
         hasShadow = Appearance.enablePanelShadow
         alphaValue = 1
+        clearSearchField()
         makeKeyAndOrderFront(nil)
         MouseEvents.toggle(true)
         thumbnailsView.scrollView.flashScrollers()
+    }
+
+    func clearSearchField() {
+        searchField?.stringValue = ""
+        Windows.filterText = ""
+        // Re-filter all windows to show everything
+        for window in Windows.list {
+            Windows.refreshIfWindowShouldBeShownToTheUser(window)
+        }
+        Windows.refreshWhichWindowsToShowTheUser()
+    }
+
+    func updateLayout() {
+        let searchFieldHeight: CGFloat = 40
+        let searchFieldPadding: CGFloat = 10
+        let searchFieldBottomMargin: CGFloat = 5
+        let gapBetweenSearchAndList: CGFloat = 5
+        let backgroundHeightReduction: CGFloat = 25
+        let thumbnailsWidth = ThumbnailsView.thumbnailsWidth
+        let thumbnailsHeight = ThumbnailsView.thumbnailsHeight
+
+        // Position search field container at the top with reduced height
+        let searchContainerWidth = thumbnailsWidth + Appearance.windowPadding * 2
+        let searchContainerHeight = searchFieldHeight + searchFieldPadding * 2 + searchFieldBottomMargin - backgroundHeightReduction
+        searchContainerView?.frame = NSRect(
+            x: 0,
+            y: thumbnailsHeight + Appearance.windowPadding * 2 + gapBetweenSearchAndList,
+            width: searchContainerWidth,
+            height: searchContainerHeight
+        )
+
+        // Position search field inside its container with adjusted padding
+        let adjustedTopPadding = (searchContainerHeight - searchFieldHeight) / 2
+        searchField?.frame = NSRect(
+            x: searchFieldPadding,
+            y: adjustedTopPadding,
+            width: searchContainerWidth - searchFieldPadding * 2,
+            height: searchFieldHeight
+        )
+
+        // Update container view size
+        let totalHeight = thumbnailsHeight + Appearance.windowPadding * 2 + gapBetweenSearchAndList + searchContainerHeight
+        containerView?.frame = NSRect(
+            x: 0,
+            y: 0,
+            width: searchContainerWidth,
+            height: totalHeight
+        )
+
+        // Update panel content size
+        setContentSize(NSSize(width: searchContainerWidth, height: totalHeight))
+        display()
+        NSScreen.preferred.repositionPanel(self)
     }
 
     static func maxThumbnailsWidth() -> CGFloat {
@@ -207,6 +358,44 @@ extension ThumbnailsPanel: NSWindowDelegate {
                 App.app.thumbnailsPanel.makeKeyAndOrderFront(nil)
             }
         }
+    }
+}
+
+extension ThumbnailsPanel: NSTextFieldDelegate {
+    func controlTextDidChange(_ obj: Notification) {
+        guard let textField = obj.object as? NSTextField else { return }
+        let searchText = textField.stringValue
+        Windows.filterText = searchText
+
+        // Re-filter all windows based on the search text
+        for window in Windows.list {
+            Windows.refreshIfWindowShouldBeShownToTheUser(window)
+        }
+        Windows.refreshWhichWindowsToShowTheUser()
+
+        // Reset focused window to first visible window
+        Windows.focusedWindowIndex = 0
+        if let hoveredWindowIndex = Windows.hoveredWindowIndex {
+            Windows.hoveredWindowIndex = nil
+            ThumbnailsView.highlight(hoveredWindowIndex)
+        }
+
+        thumbnailsView.updateItemsAndLayout()
+        updateLayout()
+        updatePreview()
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        // Handle escape key to clear search and unfocus
+        if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+            clearSearchField()
+            thumbnailsView.updateItemsAndLayout()
+            updateLayout()
+            updatePreview()
+            makeFirstResponder(nil)
+            return true
+        }
+        return false
     }
 }
 
