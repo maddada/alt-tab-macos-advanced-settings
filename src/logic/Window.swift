@@ -199,6 +199,10 @@ class Window {
                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(50)) {
                     Windows.previewFocusedWindowIfNeeded()
                 }
+                // Show blinking border overlay immediately when window is activated
+                DispatchQueue.main.async {
+                    WindowHighlightOverlay.shared.showBlinkingBorder(for: self)
+                }
             }
         }
     }
