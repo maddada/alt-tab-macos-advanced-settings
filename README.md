@@ -59,3 +59,10 @@ xcodebuild -workspace alt-tab-macos.xcworkspace -scheme Debug -configuration Deb
 ```
 
 For more detailed information about contributing, see [docs/Contributing.md](docs/Contributing.md).
+
+<div style="text-align:center; float:right;">
+  <p>Project supported by</p>
+  <a href="https://jb.gg/OpenSource">
+    <img src="docs/public/demo/jetbrains.svg" alt="Jetbrains" width="149" height="32">
+  </a>
+</div>
