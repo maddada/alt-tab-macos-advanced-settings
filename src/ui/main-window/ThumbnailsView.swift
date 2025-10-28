@@ -183,7 +183,7 @@ class ThumbnailsView: NSVisualEffectView {
 
     private func layoutParentViews(_ maxX: CGFloat, _ widthMax: CGFloat, _ maxY: CGFloat, _ labelHeight: CGFloat) {
         let heightMax = ThumbnailsPanel.maxThumbnailsHeight()
-        ThumbnailsView.thumbnailsWidth = min(maxX, widthMax)
+        ThumbnailsView.thumbnailsWidth = maxX
         ThumbnailsView.thumbnailsHeight = min(maxY, heightMax)
 
         let frameWidth = ThumbnailsView.thumbnailsWidth + Appearance.windowPadding * 2
@@ -196,7 +196,9 @@ class ThumbnailsView: NSVisualEffectView {
             originY = originY - Appearance.intraCellPadding - labelHeight
         }
         frame.size = NSSize(width: frameWidth, height: frameHeight)
-        scrollView.frame.size = NSSize(width: min(maxX, widthMax), height: min(maxY, heightMax))
+        // Extend scrollView width to accommodate scrollbar (reducing right padding)
+        let scrollBarWidth: CGFloat = 15
+        scrollView.frame.size = NSSize(width: maxX + scrollBarWidth, height: min(maxY, heightMax))
         scrollView.frame.origin = CGPoint(x: originX, y: originY)
         scrollView.contentView.frame.size = scrollView.frame.size
         if App.shared.userInterfaceLayoutDirection == .rightToLeft {

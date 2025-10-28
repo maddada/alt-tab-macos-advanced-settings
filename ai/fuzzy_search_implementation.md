@@ -90,6 +90,47 @@ Container is `NSVisualEffectView` with `material = Appearance.material`, `blendi
 - Vertical centering maintained during editing via overridden field editor methods
 - Search field focus detection uses field editor comparison rather than delegate timing
 
+## Auto-Focus Search Field in "Do Nothing" Mode
+
+When the window switcher is launched with "After release, do nothing" mode enabled, the search field is automatically focused to allow immediate typing.
+
+### Implementation
+
+**File:** `src/ui/main-window/ThumbnailsPanel.swift` (Lines 300-307)
+
+In the `show()` method, after making the panel key and visible:
+- Checks if `Preferences.shortcutStyle[App.app.shortcutIndex] == .doNothingOnRelease`
+- If true, schedules `makeFirstResponder(searchField)` with 15ms delay
+- Delay ensures panel is visible and overrides the VoiceOver first responder call (10ms)
+- Uses weak self to prevent retain cycles
+- Guards against app being hidden before focus can be set
+
+### Rationale
+
+In "do nothing" mode, users must explicitly press Enter to focus a window (no auto-focus on key release). Focusing the search field immediately provides a better UX:
+- Users can start typing to filter windows right away
+- Keyboard shortcuts are disabled when search is active (existing behavior)
+- Search field focus triggers `becomeFirstResponder()` which sets `searchFieldWasFocusedDuringSession = true`
+- This flag prevents accidental auto-focus if mode is changed during session
+
+### Compatibility
+
+- **VoiceOver:** Still functions normally; users can tab to thumbnails after initial focus
+- **Keyboard navigation:** Arrow keys and other shortcuts work after Escape unfocuses search
+- **Other modes:** "Focus on release" mode unchanged; thumbnails receive focus as before
+
+## Enter Key Activates First Filtered Window
+
+Pressing Enter while the search field is focused activates the first visible window in the filtered list.
+
+**File:** `src/ui/main-window/ThumbnailsPanel.swift` (Lines 398-406)
+
+In `control(_:textView:doCommandBy:)`, the Enter key handler finds the first window where `shouldShowTheUser == true` and calls `App.app.focusTarget()` to activate it.
+
+**File:** `src/ui/main-window/ThumbnailsPanel.swift` (Lines 385-394)
+
+In `controlTextDidChange()`, when filtering updates, the focused window index is set directly to avoid calling `Windows.voiceOverWindow()` which would steal focus from the search field via `makeFirstResponder()`. Visual highlighting is updated manually with `ThumbnailsView.highlight()`.
+
 ## Future Considerations
 
 - Search history or recent searches could be stored in preferences

@@ -285,6 +285,15 @@ class ThumbnailsPanel: NSPanel {
         makeKeyAndOrderFront(nil)
         MouseEvents.toggle(true)
         thumbnailsView.scrollView.flashScrollers()
+
+        // In "do nothing" mode, focus the search field so users can start typing immediately
+        // The delay ensures the panel is visible and overrides the VoiceOver first responder call
+        if Preferences.shortcutStyle[App.app.shortcutIndex] == .doNothingOnRelease {
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(15)) { [weak self] in
+                guard let self = self, App.app.appIsBeingUsed else { return }
+                self.makeFirstResponder(self.searchField)
+            }
+        }
     }
 
     func clearSearchField() {
@@ -373,8 +382,17 @@ extension ThumbnailsPanel: NSTextFieldDelegate {
         }
         Windows.refreshWhichWindowsToShowTheUser()
 
-        // Reset focused window to first visible window
-        Windows.focusedWindowIndex = 0
+        // Reset focused window to first visible window (don't steal focus from search field)
+        let oldIndex = Windows.focusedWindowIndex
+        if let firstVisibleIndex = Windows.list.firstIndex(where: { $0.shouldShowTheUser }) {
+            Windows.focusedWindowIndex = firstVisibleIndex
+        } else {
+            Windows.focusedWindowIndex = 0
+        }
+        // Update highlighting without calling voiceOverWindow (which would steal focus)
+        ThumbnailsView.highlight(oldIndex)
+        ThumbnailsView.highlight(Windows.focusedWindowIndex)
+
         if let hoveredWindowIndex = Windows.hoveredWindowIndex {
             Windows.hoveredWindowIndex = nil
             ThumbnailsView.highlight(hoveredWindowIndex)
@@ -386,6 +404,16 @@ extension ThumbnailsPanel: NSTextFieldDelegate {
     }
 
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        // Handle enter/return key to activate first visible window in filtered list
+        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+            // Find the first visible window (where shouldShowTheUser == true)
+            if let firstVisibleIndex = Windows.list.firstIndex(where: { $0.shouldShowTheUser }) {
+                Windows.updateFocusedAndHoveredWindowIndex(firstVisibleIndex)
+            }
+            App.app.focusTarget()
+            return true
+        }
+
         // Handle escape key to clear search and unfocus
         if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
             clearSearchField()

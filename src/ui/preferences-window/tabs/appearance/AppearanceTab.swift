@@ -399,7 +399,7 @@ class AppearanceTab: NSObject {
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceTheme", AppearanceThemePreference.allCases, segmentWidth: 100)])
         table.addRow(leftText: NSLocalizedString("Visibility", comment: ""),
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceVisibility", AppearanceVisibilityPreference.allCases, segmentWidth: 100)])
-        table.addRow(leftText: NSLocalizedString("Max width", comment: ""),
+        table.addRow(leftText: NSLocalizedString("Width", comment: ""),
             rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxWidthPercentage", 5, 100, 20, true, "%", extraAction: { _ in
                 Appearance.update()
             }))

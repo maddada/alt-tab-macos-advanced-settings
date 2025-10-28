@@ -392,17 +392,37 @@ class Windows {
     }
 
     private static func fuzzyMatchString(_ text: String, _ pattern: String) -> Bool {
-        var textIndex = text.startIndex
-        var patternIndex = pattern.startIndex
+        // Maximum allowed gap between consecutive matched characters
+        let maxGap = 3
 
-        while textIndex < text.endIndex && patternIndex < pattern.endIndex {
-            if text[textIndex] == pattern[patternIndex] {
-                patternIndex = pattern.index(after: patternIndex)
+        // Try to find the pattern starting from each position in the text
+        var startIndex = text.startIndex
+        while startIndex < text.endIndex {
+            var textIndex = startIndex
+            var patternIndex = pattern.startIndex
+            var gapSize = 0
+
+            while textIndex < text.endIndex && patternIndex < pattern.endIndex {
+                if text[textIndex] == pattern[patternIndex] {
+                    patternIndex = pattern.index(after: patternIndex)
+                    gapSize = 0
+                } else {
+                    gapSize += 1
+                    if gapSize > maxGap {
+                        break
+                    }
+                }
+                textIndex = text.index(after: textIndex)
             }
-            textIndex = text.index(after: textIndex)
+
+            if patternIndex == pattern.endIndex {
+                return true
+            }
+
+            startIndex = text.index(after: startIndex)
         }
 
-        return patternIndex == pattern.endIndex
+        return false
     }
 
     /// Selects the most appropriate main window from a given list of windows.
