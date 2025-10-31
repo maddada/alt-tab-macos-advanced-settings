@@ -12,6 +12,9 @@ Implemented a floating search field above the window switcher dialog that enable
 - Search field is cleared on window selection (Enter/Space/Click) and dialog dismissal (any method)
 - Text remains vertically centered in the field during editing
 - 5px bottom margin separates search field from window list
+- Typing any printable character auto-focuses search field and inserts the character (both modes)
+- Clicking search field in "Focus on release" mode prevents panel from closing on hotkey release
+- Search field auto-focuses on panel open in "Do nothing on release" mode
 
 ## Architecture
 
@@ -39,13 +42,19 @@ Container is `NSVisualEffectView` with `material = Appearance.material`, `blendi
 
 ### `src/ui/main-window/ThumbnailsPanel.swift`
 - Added `VerticalCenteredTextField` and `VerticalCenteredTextFieldCell` classes for text vertical centering
+- Added `onBecomeFirstResponder` callback property to `VerticalCenteredTextField` for focus detection
+- Overrode `becomeFirstResponder()` in `VerticalCenteredTextField` to trigger callback when field gains focus
+- Changed `searchField` property type from `NSTextField?` to `VerticalCenteredTextField?`
 - Added `searchField`, `searchContainerView`, and `containerView` properties
 - Added computed property `isSearchFieldActive` to detect focus state
-- Implemented `setupSearchField()` to initialize text field with visual effect container
+- Implemented `setupSearchField()` to initialize text field with visual effect container and wire up focus callback
 - Implemented `setupContainerView()` to create layout hierarchy
 - Implemented `clearSearchField()` to reset filter state and UI
 - Modified `show()` to call `clearSearchField()` on dialog open
 - Implemented `updateLayout()` to position search field with 5px bottom margin and handle panel sizing
+- Added `handleSearchFieldBecameActive()` to set `forceDoNothingOnRelease` flag when search field gains focus in "Focus on release" mode
+- Overrode `keyDown(with:)` to auto-focus search field and insert character when typing printable characters
+- Added `isPrintableCharacter()` helper to filter control characters from auto-focus trigger
 - Added `NSTextFieldDelegate` methods: `controlTextDidChange()` for real-time filtering and `control(_:textView:doCommandBy:)` for Escape key handling
 
 ### `src/logic/Windows.swift`
@@ -89,6 +98,8 @@ Container is `NSVisualEffectView` with `material = Appearance.material`, `blendi
 - Filter state cleared on all dialog dismissal paths: explicit close, window selection, focus loss, and Escape key
 - Vertical centering maintained during editing via overridden field editor methods
 - Search field focus detection uses field editor comparison rather than delegate timing
+- First typed character preserved during auto-focus by directly inserting into `stringValue` before `makeFirstResponder` completes
+- Auto-focus typing works in both "Focus on release" and "Do nothing on release" modes
 
 ## Auto-Focus Search Field in "Do Nothing" Mode
 
@@ -119,6 +130,45 @@ In "do nothing" mode, users must explicitly press Enter to focus a window (no au
 - **Keyboard navigation:** Arrow keys and other shortcuts work after Escape unfocuses search
 - **Other modes:** "Focus on release" mode unchanged; thumbnails receive focus as before
 
+## Auto-Focus Search Field on Click (Focus on Release Mode)
+
+When user clicks on the search field in "Focus on release" mode, the panel behavior switches to "Do nothing on release" to prevent the panel from closing when the hotkey is released.
+
+### Implementation
+
+**File:** `src/ui/main-window/ThumbnailsPanel.swift` (Lines 3-28, 105-108, 427-434)
+
+- `VerticalCenteredTextField` has `onBecomeFirstResponder` callback property
+- `becomeFirstResponder()` override triggers callback when field gains focus (from click or programmatic focus)
+- In `setupSearchField()`, callback is wired to call `handleSearchFieldBecameActive()`
+- `handleSearchFieldBecameActive()` checks if current mode is `focusOnRelease` and sets `App.app.forceDoNothingOnRelease = true`
+- The `forceDoNothingOnRelease` flag is checked in `ATShortcut.shouldTrigger()` to prevent hotkey release from triggering focus action
+
+### Rationale
+
+Users in "Focus on release" mode who click the search field intend to type and search. Allowing the panel to close when they release the hotkey would interrupt their workflow. By setting `forceDoNothingOnRelease`, the panel stays open until they explicitly press Enter or Escape.
+
+## Auto-Focus Search Field When Typing
+
+When user types any printable character while the panel is visible (in both modes), the search field automatically gains focus and the typed character is inserted.
+
+### Implementation
+
+**File:** `src/ui/main-window/ThumbnailsPanel.swift` (Lines 302-328)
+
+- `keyDown(with:)` override intercepts keyboard events at panel level
+- Checks if search field is not already active using `ThumbnailsPanel.isSearchFieldActive`
+- Filters printable characters using `isPrintableCharacter()` which excludes control characters and special keys
+- Directly sets `searchField.stringValue` to the typed character (avoids race condition with `makeFirstResponder`)
+- Calls `makeFirstResponder(searchField)` to focus the field
+- Sets cursor position to end of text using `currentEditor()?.selectedRange`
+- Posts `NSControl.textDidChangeNotification` to trigger filtering logic in `controlTextDidChange()`
+- In "Focus on release" mode, also sets `App.app.forceDoNothingOnRelease = true`
+
+### Character Insertion Approach
+
+Initial implementation used `keyDown(with:)` forwarding, but this caused the first character to be lost due to `makeFirstResponder` timing. Current approach directly inserts the character into `stringValue` before focusing, ensuring all typed characters appear in the search field.
+
 ## Enter Key Activates First Filtered Window
 
 Pressing Enter while the search field is focused activates the first visible window in the filtered list.
@@ -133,7 +183,6 @@ In `controlTextDidChange()`, when filtering updates, the focused window index is
 
 ## Future Considerations
 
-- Search history or recent searches could be stored in preferences
 - Highlight matching characters in window/app names in the UI
 - Configurable fuzzy match sensitivity (strict vs loose character ordering)
 - Search syntax for filtering by app name only or window title only (e.g., "app:Chrome" or "title:Document")

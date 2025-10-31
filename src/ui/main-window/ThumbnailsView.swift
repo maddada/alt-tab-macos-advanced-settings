@@ -6,6 +6,7 @@ class ThumbnailsView: NSVisualEffectView {
     var rows = [[ThumbnailView]]()
     static var thumbnailsWidth = CGFloat(0.0)
     static var thumbnailsHeight = CGFloat(0.0)
+    static var lastValidWidth = CGFloat(0.0) // Store the width when windows are visible
 
     convenience init() {
         self.init(frame: .zero)
@@ -183,7 +184,18 @@ class ThumbnailsView: NSVisualEffectView {
 
     private func layoutParentViews(_ maxX: CGFloat, _ widthMax: CGFloat, _ maxY: CGFloat, _ labelHeight: CGFloat) {
         let heightMax = ThumbnailsPanel.maxThumbnailsHeight()
-        ThumbnailsView.thumbnailsWidth = maxX
+
+        // Check if there are any visible windows
+        let hasVisibleWindows = Windows.list.contains { $0.shouldShowTheUser }
+
+        if hasVisibleWindows {
+            // Store the actual width when windows are visible
+            ThumbnailsView.lastValidWidth = maxX
+            ThumbnailsView.thumbnailsWidth = maxX
+        } else {
+            // Use the last valid width to maintain panel size when no windows match
+            ThumbnailsView.thumbnailsWidth = ThumbnailsView.lastValidWidth > 0 ? ThumbnailsView.lastValidWidth : maxX
+        }
         ThumbnailsView.thumbnailsHeight = min(maxY, heightMax)
 
         let frameWidth = ThumbnailsView.thumbnailsWidth + Appearance.windowPadding * 2

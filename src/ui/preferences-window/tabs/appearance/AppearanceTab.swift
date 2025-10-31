@@ -400,11 +400,11 @@ class AppearanceTab: NSObject {
         table.addRow(leftText: NSLocalizedString("Visibility", comment: ""),
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceVisibility", AppearanceVisibilityPreference.allCases, segmentWidth: 100)])
         table.addRow(leftText: NSLocalizedString("Width", comment: ""),
-            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxWidthPercentage", 5, 100, 20, true, "%", extraAction: { _ in
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxWidthPercentage", 5, 100, 0, false, "%", extraAction: { _ in
                 Appearance.update()
             }))
         table.addRow(leftText: NSLocalizedString("Max height", comment: ""),
-            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxHeightPercentage", 5, 100, 20, true, "%", extraAction: { _ in
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxHeightPercentage", 5, 100, 0, false, "%", extraAction: { _ in
                 Appearance.update()
             }))
         table.addRow(leftText: NSLocalizedString("Vertical offset", comment: ""),

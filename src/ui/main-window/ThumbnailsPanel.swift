@@ -1,6 +1,16 @@
 import Cocoa
 
 class VerticalCenteredTextField: NSTextField {
+    var onBecomeFirstResponder: (() -> Void)?
+
+    override func becomeFirstResponder() -> Bool {
+        let result = super.becomeFirstResponder()
+        if result {
+            onBecomeFirstResponder?()
+        }
+        return result
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
     }
@@ -39,7 +49,7 @@ class ThumbnailsPanel: NSPanel {
     var previewWindow: NSWindow?
     var previewView: NSImageView?
     var previewContainerView: NSView?
-    var searchField: NSTextField?
+    var searchField: VerticalCenteredTextField?
     var searchContainerView: NSView?
     var containerView: NSView?
     override var canBecomeKey: Bool { true }
@@ -92,6 +102,11 @@ class ThumbnailsPanel: NSPanel {
         searchField?.isSelectable = true
         searchField?.delegate = self
 
+        // Set up callback for when search field becomes first responder
+        searchField?.onBecomeFirstResponder = { [weak self] in
+            self?.handleSearchFieldBecameActive()
+        }
+
         // Center text vertically with custom cell
         if let cell = searchField?.cell as? VerticalCenteredTextFieldCell {
             cell.usesSingleLineMode = true
@@ -105,7 +120,7 @@ class ThumbnailsPanel: NSPanel {
         visualEffectView.blendingMode = .behindWindow
         visualEffectView.state = .active
         visualEffectView.wantsLayer = true
-        visualEffectView.layer?.cornerRadius = Appearance.windowCornerRadius
+        visualEffectView.layer?.cornerRadius = 15
         visualEffectView.layer?.masksToBounds = true
 
         searchContainerView = visualEffectView
@@ -187,6 +202,12 @@ class ThumbnailsPanel: NSPanel {
         }
 
         let focusedWindow = Windows.list[Windows.focusedWindowIndex]
+
+        // Don't show preview if the focused window is filtered out
+        guard focusedWindow.shouldShowTheUser else {
+            previewWindow?.orderOut(nil)
+            return
+        }
 
         // Get the thumbnail
         if let thumbnail = focusedWindow.thumbnail {
@@ -276,6 +297,44 @@ class ThumbnailsPanel: NSPanel {
         } else {
             super.orderOut(sender)
         }
+    }
+
+    override func keyDown(with event: NSEvent) {
+        // If search field is not active and user types a printable character,
+        // automatically focus the search field and insert the character
+        if !ThumbnailsPanel.isSearchFieldActive,
+           let characters = event.characters,
+           !characters.isEmpty,
+           isPrintableCharacter(characters) {
+            // Focus the search field and insert the character
+            if let searchField = searchField {
+                // Set the flag to prevent panel from closing on hotkey release
+                if Preferences.shortcutStyle[App.app.shortcutIndex] == .focusOnRelease {
+                    App.app.forceDoNothingOnRelease = true
+                }
+                // Insert the character into the search field
+                searchField.stringValue = characters
+                // Focus the search field and position cursor at the end
+                makeFirstResponder(searchField)
+                searchField.currentEditor()?.selectedRange = NSRange(location: characters.count, length: 0)
+                // Trigger the text change handler to update the window filtering
+                if let textField = searchField as NSTextField? {
+                    NotificationCenter.default.post(name: NSControl.textDidChangeNotification, object: textField)
+                }
+                return
+            }
+        }
+        super.keyDown(with: event)
+    }
+
+    private func isPrintableCharacter(_ string: String) -> Bool {
+        // Check if the string contains printable characters (letters, numbers, symbols)
+        // Exclude control characters and special keys
+        guard let firstChar = string.first else { return false }
+        let scalar = firstChar.unicodeScalars.first!
+        // Allow letters, numbers, punctuation, and symbols, but exclude control characters
+        return !CharacterSet.controlCharacters.contains(scalar) &&
+               !CharacterSet.illegalCharacters.contains(scalar)
     }
 
     func show() {
@@ -401,6 +460,15 @@ extension ThumbnailsPanel: NSTextFieldDelegate {
         thumbnailsView.updateItemsAndLayout()
         updateLayout()
         updatePreview()
+    }
+
+    func handleSearchFieldBecameActive() {
+        // When the user clicks on the search field in "Focus on release" mode,
+        // switch to "Do nothing on release" behavior so they can type without
+        // the panel closing when they release the hotkey
+        if Preferences.shortcutStyle[App.app.shortcutIndex] == .focusOnRelease {
+            App.app.forceDoNothingOnRelease = true
+        }
     }
 
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
