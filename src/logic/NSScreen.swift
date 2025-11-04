@@ -64,6 +64,12 @@ extension NSScreen {
         return nil
     }
 
+    func resolutionString() -> String {
+        let width = Int(frame.width)
+        let height = Int(frame.height)
+        return "\(width)x\(height)"
+    }
+
     // periphery:ignore
     func refreshRate() -> Double? {
         return number().flatMap { CGDisplayCopyDisplayMode($0)?.refreshRate }

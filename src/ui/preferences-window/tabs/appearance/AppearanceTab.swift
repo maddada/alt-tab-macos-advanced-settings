@@ -390,6 +390,15 @@ class AppearanceTab: NSObject {
         let table = TableGroupView(title: NSLocalizedString("Appearance", comment: ""),
             subTitle: NSLocalizedString("Switch between 3 different styles. You can customize them.", comment: ""),
             width: PreferencesWindow.width)
+        let resolutionLabel = NSTextField()
+        resolutionLabel.stringValue = NSLocalizedString("Settings for: ", comment: "") + NSScreen.preferred.resolutionString()
+        resolutionLabel.isEditable = false
+        resolutionLabel.isBordered = false
+        resolutionLabel.drawsBackground = false
+        resolutionLabel.translatesAutoresizingMaskIntoConstraints = false
+        resolutionLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        resolutionLabel.textColor = NSColor.secondaryLabelColor
+        table.addRow(rightViews: [resolutionLabel])
         table.addRow(secondaryViews: [LabelAndControl.makeImageRadioButtons("appearanceStyle", AppearanceStylePreference.allCases, extraAction: { _ in
             toggleCustomizeStyleButton()
         }, buttonSpacing: 10)], secondaryViewsAlignment: .centerX)
