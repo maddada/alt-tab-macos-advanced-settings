@@ -73,6 +73,7 @@ class Preferences {
         "previewFadeInAnimation": "true",
         "hideSpaceNumberLabels": "false",
         "hideStatusIcons": "false",
+        "showTooltips": "true",
         "startAtLogin": "true",
         "menubarIcon": MenubarIconPreference.outlined.indexAsString,
         "menubarIconShown": "true",
@@ -121,6 +122,7 @@ class Preferences {
     static var previewFadeInAnimation: Bool { CachedUserDefaults.bool("previewFadeInAnimation") }
     static var hideSpaceNumberLabels: Bool { CachedUserDefaults.bool("hideSpaceNumberLabels") }
     static var hideStatusIcons: Bool { CachedUserDefaults.bool("hideStatusIcons") }
+    static var showTooltips: Bool { CachedUserDefaults.bool("showTooltips") }
     static var hideAppBadges: Bool { CachedUserDefaults.bool("hideAppBadges") }
     // periphery:ignore
     static var startAtLogin: Bool { CachedUserDefaults.bool("startAtLogin") }
