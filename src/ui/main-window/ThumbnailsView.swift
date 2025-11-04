@@ -313,11 +313,19 @@ class ScrollView: NSScrollView {
                 target = target!.superview
             }
             if let target = target as? ThumbnailView {
-                if previousTarget != target {
+                // Check if we need to update to a different window
+                if let index = ThumbnailsView.recycledViews.firstIndex(of: target) {
+                    // Update hover state immediately if it's different from current
+                    if Windows.hoveredWindowIndex != index {
+                        Windows.updateFocusedAndHoveredWindowIndex(index, true)
+                    }
+                }
+                // Update window controls
+                if previousTarget !== target {
                     previousTarget?.showOrHideWindowControls(false)
                     previousTarget = target
                 }
-                target.mouseMoved()
+                target.showOrHideWindowControls(true)
             } else {
                 if !checkIfWithinInterPadding() {
                     resetHoveredWindow()
