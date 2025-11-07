@@ -296,7 +296,25 @@ class CachedUserDefaults {
     }
 
     static func int(_ key: String) -> Int {
-        return getThenConvertOrReset(key, { s in Int(s) })
+        // Handle resolution-sensitive keys
+        let resolutionSensitiveKeys = ["windowMaxWidthPercentage", "windowMaxHeightPercentage", "windowVerticalOffset"]
+        let finalKey: String
+
+        if resolutionSensitiveKeys.contains(key) {
+            let resolutionKey = "\(key)_\(NSScreen.preferred.resolutionString())"
+            // Check if resolution-specific key exists
+            if UserDefaults.standard.string(forKey: resolutionKey) != nil {
+                finalKey = resolutionKey
+            } else {
+                // Fall back to base key
+                // When the UI control changes, Preferences.set will create the resolution-specific key
+                finalKey = key
+            }
+        } else {
+            finalKey = key
+        }
+
+        return getThenConvertOrReset(finalKey, { s in Int(s) })
     }
 
     static func bool(_ key: String) -> Bool {
@@ -308,7 +326,25 @@ class CachedUserDefaults {
     }
 
     static func macroPref<A>(_ key: String, _ macroPreferences: [A]) -> A {
-        return getThenConvertOrReset(key, { s in Int(s).flatMap { macroPreferences[safe: $0] } })
+        // Handle resolution-sensitive keys
+        let resolutionSensitiveKeys = ["appearanceStyle", "appearanceSize"]
+        let finalKey: String
+
+        if resolutionSensitiveKeys.contains(key) {
+            let resolutionKey = "\(key)_\(NSScreen.preferred.resolutionString())"
+            // Check if resolution-specific key exists
+            if UserDefaults.standard.string(forKey: resolutionKey) != nil {
+                finalKey = resolutionKey
+            } else {
+                // Fall back to base key
+                // When the UI control changes, Preferences.set will create the resolution-specific key
+                finalKey = key
+            }
+        } else {
+            finalKey = key
+        }
+
+        return getThenConvertOrReset(finalKey, { s in Int(s).flatMap { macroPreferences[safe: $0] } })
     }
 
     /// some UI elements (e.g. dropdown, radios) need an int. We find the right int from the MacroPreference index

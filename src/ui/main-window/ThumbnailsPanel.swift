@@ -90,7 +90,20 @@ class ThumbnailsPanel: NSPanel {
     private func setupSearchField() {
         // Create the search text field with vertical centering
         searchField = VerticalCenteredTextField(frame: .zero)
-        searchField?.placeholderString = "Search windows..."
+
+        // Set placeholder with custom color and centered alignment
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        let placeholderAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor(hex: 0x5D5D5D),
+            .font: NSFont.systemFont(ofSize: 14),
+            .paragraphStyle: paragraphStyle
+        ]
+        searchField?.placeholderAttributedString = NSAttributedString(
+            string: "Search...",
+            attributes: placeholderAttributes
+        )
+
         searchField?.isBordered = false
         searchField?.focusRingType = .none
         searchField?.drawsBackground = false
