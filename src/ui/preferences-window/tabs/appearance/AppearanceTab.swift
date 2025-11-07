@@ -417,7 +417,7 @@ class AppearanceTab: NSObject {
                 Appearance.update()
             }))
         table.addRow(leftText: NSLocalizedString("Vertical offset", comment: ""),
-            rightViews: LabelAndControl.makeLabelWithSlider("", "windowVerticalOffset", -50, 50, 21, true, "%"))
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowVerticalOffset", -50, 50, 0, false, "%"))
         table.addRow(rightViews: customizeStyleButton)
         table.fit()
         return table
