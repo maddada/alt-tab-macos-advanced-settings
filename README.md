@@ -1,4 +1,4 @@
-# AltTab (but modded by @maddada to add more features)
+# AltTab (but modded by @maddada to add more features and fix ultrawide/huge screens compatibility)
 
 [Find out more on the official website](https://alt-tab-macos.netlify.app/)
 
