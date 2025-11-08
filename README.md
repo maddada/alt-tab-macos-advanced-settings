@@ -19,12 +19,18 @@ Keep in mind that the only way to use it is to install XCode and then build it l
 
 <img width="1368" height="912" alt="2025-11-07_AltTab_11-31-40" src="https://github.com/user-attachments/assets/e6b1d34b-e627-4c0a-ae4b-cc69b5197507" />
 
+<br/>
+<br/>
+
 <div style="text-align:center; float:right;">
-  <p>Project supported by</p>
+  <p>The original project is supported by</p>
   <a href="https://jb.gg/OpenSource">
     <img src="docs/public/demo/jetbrains.svg" alt="Jetbrains" width="149" height="32">
   </a>
 </div>
+
+<br/>
+<br/>
 
 #1: Why use a 55" TV as my main monitor:
 - I find this nicer than having 2 ultrawide monitors on top of each other because I can make windows have more height.
