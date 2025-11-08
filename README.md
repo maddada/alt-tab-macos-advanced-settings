@@ -10,6 +10,11 @@ Why the fork:
   - Added easy instant search with keyboard controls to go to different windows (just start typing)
   - Disable the useless tooltips
 
+Huge thank you to [lwouis](https://github.com/lwouis) for making this awesome app. Hope these settings can be added to the original app and this fork would be ditched.
+
+I'll keep this fork synced with the original repo since I'm using it personally.
+Keep in mind that the only way to use it is to install XCode and then build it locally on your machine, ask in the issues if you want detailed instructions or just ask Claude.
+
 <img width="1531" height="697" alt="2025-11-09_CleanShot_00-59-41" src="https://github.com/user-attachments/assets/3f050e30-8d49-4772-ac30-d61287621969" />
 
 <img width="1368" height="912" alt="2025-11-07_AltTab_11-31-40" src="https://github.com/user-attachments/assets/e6b1d34b-e627-4c0a-ae4b-cc69b5197507" />
