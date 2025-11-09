@@ -1,5 +1,7 @@
 # AltTab (but modded by @maddada to add more features and fix ultrawide/huge screens compatibility)
 
+Latest update: 2025-11-08 - Synced with original repo v7.31.0
+
 [Find out more on the official website](https://alt-tab-macos.netlify.app/)
 
 ## Why the fork:
