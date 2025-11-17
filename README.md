@@ -2,6 +2,8 @@
 
 Latest update: 2025-11-08 - Synced with original repo v7.31.0
 
+Now with more advanced features which were removed from the original project.
+
 [Find out more on the official website](https://alt-tab-macos.netlify.app/)
 
 ## Why the fork:

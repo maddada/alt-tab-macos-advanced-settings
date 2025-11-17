@@ -73,6 +73,7 @@ class Preferences {
         "previewFadeInAnimation": "true",
         "hideSpaceNumberLabels": "false",
         "hideStatusIcons": "false",
+        "showTooltips": "true",
         "startAtLogin": "true",
         "menubarIcon": MenubarIconPreference.outlined.indexAsString,
         "menubarIconShown": "true",
@@ -88,6 +89,9 @@ class Preferences {
         "hideThumbnails": "false",
         "previewFocusedWindow": "false",
         "screenRecordingPermissionSkipped": "false",
+        "windowMaxWidthPercentage": "80",
+        "windowMaxHeightPercentage": "80",
+        "windowVerticalOffset": "0",
     ]
 
     // system preferences
@@ -118,16 +122,20 @@ class Preferences {
     static var previewFadeInAnimation: Bool { CachedUserDefaults.bool("previewFadeInAnimation") }
     static var hideSpaceNumberLabels: Bool { CachedUserDefaults.bool("hideSpaceNumberLabels") }
     static var hideStatusIcons: Bool { CachedUserDefaults.bool("hideStatusIcons") }
+    static var showTooltips: Bool { CachedUserDefaults.bool("showTooltips") }
     static var hideAppBadges: Bool { CachedUserDefaults.bool("hideAppBadges") }
     // periphery:ignore
     static var startAtLogin: Bool { CachedUserDefaults.bool("startAtLogin") }
     static var blacklist: [BlacklistEntry] { CachedUserDefaults.json("blacklist", [BlacklistEntry].self) }
     static var previewFocusedWindow: Bool { CachedUserDefaults.bool("previewFocusedWindow") }
     static var screenRecordingPermissionSkipped: Bool { CachedUserDefaults.bool("screenRecordingPermissionSkipped") }
+    static var windowMaxWidthPercentage: Int { getResolutionSpecificInt("windowMaxWidthPercentage") }
+    static var windowMaxHeightPercentage: Int { getResolutionSpecificInt("windowMaxHeightPercentage") }
+    static var windowVerticalOffset: Int { getResolutionSpecificInt("windowVerticalOffset") }
 
     // macro values
-    static var appearanceStyle: AppearanceStylePreference { CachedUserDefaults.macroPref("appearanceStyle", AppearanceStylePreference.allCases) }
-    static var appearanceSize: AppearanceSizePreference { CachedUserDefaults.macroPref("appearanceSize", AppearanceSizePreference.allCases) }
+    static var appearanceStyle: AppearanceStylePreference { getResolutionSpecificMacroPref("appearanceStyle", AppearanceStylePreference.allCases) }
+    static var appearanceSize: AppearanceSizePreference { getResolutionSpecificMacroPref("appearanceSize", AppearanceSizePreference.allCases) }
     static var appearanceTheme: AppearanceThemePreference { CachedUserDefaults.macroPref("appearanceTheme", AppearanceThemePreference.allCases) }
     static var appearanceVisibility: AppearanceVisibilityPreference { CachedUserDefaults.macroPref("appearanceVisibility", AppearanceVisibilityPreference.allCases) }
     // periphery:ignore
@@ -169,8 +177,12 @@ class Preferences {
     }
 
     static func set<T>(_ key: String, _ value: T) where T: Encodable {
-        UserDefaults.standard.set(key == "blacklist" ? jsonEncode(value) : value, forKey: key)
+        let resolutionSensitiveKeys = ["windowMaxWidthPercentage", "windowMaxHeightPercentage", "windowVerticalOffset", "appearanceStyle", "appearanceSize"]
+        let finalKey = resolutionSensitiveKeys.contains(key) ? resolutionSpecificKey(key) : key
+
+        UserDefaults.standard.set(finalKey == "blacklist" ? jsonEncode(value) : value, forKey: finalKey)
         CachedUserDefaults.cache.removeValue(forKey: key)
+        CachedUserDefaults.cache.removeValue(forKey: finalKey)
     }
 
     static func remove(_ key: String) {
@@ -221,6 +233,42 @@ class Preferences {
         guard let number = name.last?.wholeNumberValue else { return 0 }
         return number - 1
     }
+
+    private static func currentResolution() -> String {
+        return NSScreen.preferred.resolutionString()
+    }
+
+    private static func resolutionSpecificKey(_ baseKey: String) -> String {
+        return "\(baseKey)_\(currentResolution())"
+    }
+
+    private static func getResolutionSpecificInt(_ baseKey: String) -> Int {
+        let resolutionKey = resolutionSpecificKey(baseKey)
+
+        // Try resolution-specific key first
+        if UserDefaults.standard.string(forKey: resolutionKey) != nil {
+            return CachedUserDefaults.int(resolutionKey)
+        }
+
+        // If not found, use base key and copy to resolution-specific key
+        let value = CachedUserDefaults.int(baseKey)
+        Preferences.set(resolutionKey, String(value))
+        return value
+    }
+
+    private static func getResolutionSpecificMacroPref<T: MacroPreference & CaseIterable & Equatable>(_ baseKey: String, _ preferences: [T]) -> T {
+        let resolutionKey = resolutionSpecificKey(baseKey)
+
+        // Try resolution-specific key first
+        if UserDefaults.standard.string(forKey: resolutionKey) != nil {
+            return CachedUserDefaults.macroPref(resolutionKey, preferences)
+        }
+
+        // If not found, use base key and copy to resolution-specific key
+        let value = CachedUserDefaults.macroPref(baseKey, preferences)
+        Preferences.set(resolutionKey, value.indexAsString)
+        return value
+    }
 }
 
 class CachedUserDefaults {
@@ -248,7 +296,25 @@ class CachedUserDefaults {
     }
 
     static func int(_ key: String) -> Int {
-        return getThenConvertOrReset(key, { s in Int(s) })
+        // Handle resolution-sensitive keys
+        let resolutionSensitiveKeys = ["windowMaxWidthPercentage", "windowMaxHeightPercentage", "windowVerticalOffset"]
+        let finalKey: String
+
+        if resolutionSensitiveKeys.contains(key) {
+            let resolutionKey = "\(key)_\(NSScreen.preferred.resolutionString())"
+            // Check if resolution-specific key exists
+            if UserDefaults.standard.string(forKey: resolutionKey) != nil {
+                finalKey = resolutionKey
+            } else {
+                // Fall back to base key
+                // When the UI control changes, Preferences.set will create the resolution-specific key
+                finalKey = key
+            }
+        } else {
+            finalKey = key
+        }
+
+        return getThenConvertOrReset(finalKey, { s in Int(s) })
     }
 
     static func bool(_ key: String) -> Bool {
@@ -260,7 +326,25 @@ class CachedUserDefaults {
     }
 
     static func macroPref<A>(_ key: String, _ macroPreferences: [A]) -> A {
-        return getThenConvertOrReset(key, { s in Int(s).flatMap { macroPreferences[safe: $0] } })
+        // Handle resolution-sensitive keys
+        let resolutionSensitiveKeys = ["appearanceStyle", "appearanceSize"]
+        let finalKey: String
+
+        if resolutionSensitiveKeys.contains(key) {
+            let resolutionKey = "\(key)_\(NSScreen.preferred.resolutionString())"
+            // Check if resolution-specific key exists
+            if UserDefaults.standard.string(forKey: resolutionKey) != nil {
+                finalKey = resolutionKey
+            } else {
+                // Fall back to base key
+                // When the UI control changes, Preferences.set will create the resolution-specific key
+                finalKey = key
+            }
+        } else {
+            finalKey = key
+        }
+
+        return getThenConvertOrReset(finalKey, { s in Int(s).flatMap { macroPreferences[safe: $0] } })
     }
 
     /// some UI elements (e.g. dropdown, radios) need an int. We find the right int from the MacroPreference index

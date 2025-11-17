@@ -8,7 +8,7 @@ class TrafficLightButton: NSButton {
     var type: TrafficLightButtonType!
     var window_: Window?
 
-    init(_ type: TrafficLightButtonType, _ tooltip: String) {
+    init(_ type: TrafficLightButtonType, _ tooltip: String?) {
         super.init(frame: NSRect(origin: .zero, size: NSSize(width: TrafficLightButton.size, height: TrafficLightButton.size)))
         self.type = type
         target = self

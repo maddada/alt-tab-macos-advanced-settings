@@ -57,6 +57,9 @@ class Appearance {
     private static func updateSize() {
         let isHorizontalScreen = NSScreen.preferred.isHorizontal()
         maxWidthOnScreen = AppearanceTestable.comfortableWidth(NSScreen.preferred.physicalSize().map { $0.width })
+        // Apply user-configured width and height percentages
+        maxWidthOnScreen = CGFloat(Preferences.windowMaxWidthPercentage) / 100.0
+        maxHeightOnScreen = CGFloat(Preferences.windowMaxHeightPercentage) / 100.0
         if currentStyle == .appIcons {
             appIconsSize()
         } else if currentStyle == .titles {
@@ -131,7 +134,11 @@ class Appearance {
         cellCornerRadius = 10
         windowCornerRadius = 23
         edgeInsetsSize = 7
-        maxWidthOnScreen = isHorizontalScreen ? 0.6 : 0.8
+        // For titles style, we keep the user-configured width (set in updateSize)
+        // but we can provide reasonable defaults if the user hasn't changed them
+        if Preferences.windowMaxWidthPercentage == 80 {
+            maxWidthOnScreen = isHorizontalScreen ? 0.6 : 0.8
+        }
         windowMinWidthInRow = 0.6
         windowMaxWidthInRow = 0.9
         rowsCount = 1

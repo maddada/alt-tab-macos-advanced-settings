@@ -33,6 +33,8 @@ class GeneralTab {
             ])
         let language = TableGroupView.Row(leftTitle: NSLocalizedString("Language", comment: ""),
             rightViews: [LabelAndControl.makeDropdown("language", LanguagePreference.allCases, extraAction: setLanguageCallback)])
+        let showTooltips = TableGroupView.Row(leftTitle: NSLocalizedString("Show tooltips", comment: ""),
+            rightViews: [LabelAndControl.makeSwitch("showTooltips")])
         let resetPreferences = NSButton(title: NSLocalizedString("Reset preferences and restart…", comment: ""), target: self, action: #selector(GeneralTab.resetPreferences))
         if #available(macOS 11.0, *) { resetPreferences.hasDestructiveAction = true }
         for i in 0..<MenubarIconPreference.allCases.count {
@@ -52,6 +54,7 @@ class GeneralTab {
         table.addRow(menubarIcon)
         table.addNewTable()
         table.addRow(language)
+        table.addRow(showTooltips)
         let view = TableGroupSetView(originalViews: [table], toolsViews: [resetPreferences], toolsAlignment: .trailing)
         view.translatesAutoresizingMaskIntoConstraints = false
         view.widthAnchor.constraint(equalToConstant: view.fittingSize.width).isActive = true

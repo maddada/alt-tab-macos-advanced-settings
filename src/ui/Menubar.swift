@@ -50,7 +50,7 @@ class Menubar {
         statusItem.target = self
         statusItem.button!.action = #selector(statusItemOnClick)
         statusItem.button!.sendAction(on: [.leftMouseDown, .rightMouseDown])
-    }
+    }   
 
     // NSMenuItem.isHidden isn't reliable with custom views. We add/remove to hide/show these items
     static func togglePermissionCallout(_ show: Bool) {

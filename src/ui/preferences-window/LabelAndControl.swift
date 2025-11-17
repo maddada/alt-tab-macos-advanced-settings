@@ -303,13 +303,20 @@ class LabelAndControl: NSObject {
 
     static func controlWasChanged(_ senderControl: NSControl, _ controlId: String?) {
         if let newValue = LabelAndControl.getControlValue(senderControl, controlId) {
-            if let oldValue = UserDefaults.standard.string(forKey: senderControl.identifier!.rawValue), newValue == oldValue {
+            let identifier = senderControl.identifier!.rawValue
+
+            // For resolution-sensitive keys, check the resolution-specific key, not the base key
+            let resolutionSensitiveKeys = ["windowMaxWidthPercentage", "windowMaxHeightPercentage", "windowVerticalOffset", "appearanceStyle", "appearanceSize"]
+            let keyToCheck = resolutionSensitiveKeys.contains(identifier) ?
+                "\(identifier)_\(NSScreen.preferred.resolutionString())" : identifier
+
+            if let oldValue = UserDefaults.standard.string(forKey: keyToCheck), newValue == oldValue {
                 return
             }
             if senderControl is NSSlider {
                 updateSuffixWithValue(senderControl as! NSSlider, newValue)
             }
-            Preferences.set(senderControl.identifier!.rawValue, newValue)
+            Preferences.set(identifier, newValue)
         }
         // some preferences require re-creating some components
         if (!(senderControl is NSSlider) || (NSEvent.pressedMouseButtons & (1 << 0)) == 0) &&
@@ -335,6 +342,8 @@ class LabelAndControl: NSObject {
         let suffix = NSTextField(labelWithString: text)
         suffix.textColor = .gray
         suffix.identifier = NSUserInterfaceItemIdentifier(controlName + ControlIdentifierDiscriminator.SUFFIX.rawValue)
+        suffix.translatesAutoresizingMaskIntoConstraints = false
+        suffix.addOrUpdateConstraint(suffix.widthAnchor, 45)
         return suffix
     }
 
@@ -367,7 +376,7 @@ class LabelAndControl: NSObject {
             view.identifier?.rawValue == control.identifier!.rawValue + ControlIdentifierDiscriminator.SUFFIX.rawValue
         }
         if let suffixView: NSTextField = control.superview?.subviews.first(where: suffixIdentifierPredicate) as? NSTextField {
-            let regex = try! NSRegularExpression(pattern: "^[0-9]+") // first decimal
+            let regex = try! NSRegularExpression(pattern: "^-?[0-9]+") // first decimal (with optional negative sign)
             let range = NSMakeRange(0, suffixView.stringValue.count)
             suffixView.stringValue = regex.stringByReplacingMatches(in: suffixView.stringValue, range: range, withTemplate: value)
         }

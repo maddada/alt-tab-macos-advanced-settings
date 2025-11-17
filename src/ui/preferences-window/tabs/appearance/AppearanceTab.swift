@@ -390,6 +390,15 @@ class AppearanceTab: NSObject {
         let table = TableGroupView(title: NSLocalizedString("Appearance", comment: ""),
             subTitle: NSLocalizedString("Switch between 3 different styles. You can customize them.", comment: ""),
             width: PreferencesWindow.width)
+        let resolutionLabel = NSTextField()
+        resolutionLabel.stringValue = NSLocalizedString("Settings for: ", comment: "") + NSScreen.preferred.resolutionString()
+        resolutionLabel.isEditable = false
+        resolutionLabel.isBordered = false
+        resolutionLabel.drawsBackground = false
+        resolutionLabel.translatesAutoresizingMaskIntoConstraints = false
+        resolutionLabel.font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        resolutionLabel.textColor = NSColor.secondaryLabelColor
+        table.addRow(rightViews: [resolutionLabel])
         table.addRow(secondaryViews: [LabelAndControl.makeImageRadioButtons("appearanceStyle", AppearanceStylePreference.allCases, extraAction: { _ in
             toggleCustomizeStyleButton()
         }, buttonSpacing: 10)], secondaryViewsAlignment: .centerX)
@@ -399,6 +408,16 @@ class AppearanceTab: NSObject {
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceTheme", AppearanceThemePreference.allCases, segmentWidth: 100)])
         table.addRow(leftText: NSLocalizedString("Visibility", comment: ""),
             rightViews: [LabelAndControl.makeSegmentedControl("appearanceVisibility", AppearanceVisibilityPreference.allCases, segmentWidth: 100)])
+        table.addRow(leftText: NSLocalizedString("Width", comment: ""),
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxWidthPercentage", 5, 100, 0, false, "%", extraAction: { _ in
+                Appearance.update()
+            }))
+        table.addRow(leftText: NSLocalizedString("Max height", comment: ""),
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowMaxHeightPercentage", 5, 100, 0, false, "%", extraAction: { _ in
+                Appearance.update()
+            }))
+        table.addRow(leftText: NSLocalizedString("Vertical offset", comment: ""),
+            rightViews: LabelAndControl.makeLabelWithSlider("", "windowVerticalOffset", -50, 50, 0, false, "%"))
         table.addRow(rightViews: customizeStyleButton)
         table.fit()
         return table

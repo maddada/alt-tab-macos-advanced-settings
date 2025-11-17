@@ -8,18 +8,18 @@ class ThumbnailView: FlippedView {
     let thumbnailContainer = FlippedView()
     var appIcon = LightImageView()
     var label = ThumbnailTitleView(shadow: ThumbnailView.makeShadow(Appearance.titleShadowColor), font: Appearance.font)
-    var fullscreenIcon = ThumbnailFontIconView(symbol: .circledPlusSign, tooltip: NSLocalizedString("Window is fullscreen", comment: ""))
-    var minimizedIcon = ThumbnailFontIconView(symbol: .circledMinusSign, tooltip: NSLocalizedString("Window is minimized", comment: ""))
-    var hiddenIcon = ThumbnailFontIconView(symbol: .circledSlashSign, tooltip: NSLocalizedString("App is hidden", comment: ""))
+    var fullscreenIcon = ThumbnailFontIconView(symbol: .circledPlusSign, tooltip: Preferences.showTooltips ? NSLocalizedString("Window is fullscreen", comment: "") : nil)
+    var minimizedIcon = ThumbnailFontIconView(symbol: .circledMinusSign, tooltip: Preferences.showTooltips ? NSLocalizedString("Window is minimized", comment: "") : nil)
+    var hiddenIcon = ThumbnailFontIconView(symbol: .circledSlashSign, tooltip: Preferences.showTooltips ? NSLocalizedString("App is hidden", comment: "") : nil)
     var spaceIcon = ThumbnailFontIconView(symbol: .circledNumber0)
     var dockLabelIcon = ThumbnailFilledFontIconView(
         ThumbnailFontIconView(symbol: .filledCircledNumber0, size: dockLabelLabelSize(), color: NSColor(srgbRed: 1, green: 0.30, blue: 0.25, alpha: 1), shadow: nil),
         backgroundColor: NSColor.white, size: dockLabelLabelSize())
-    var quitIcon = TrafficLightButton(.quit, NSLocalizedString("Quit app", comment: ""))
-    var closeIcon = TrafficLightButton(.close, NSLocalizedString("Close window", comment: ""))
-    var minimizeIcon = TrafficLightButton(.miniaturize, NSLocalizedString("Minimize/Deminimize window", comment: ""))
-    var maximizeIcon = TrafficLightButton(.fullscreen, NSLocalizedString("Fullscreen/Defullscreen window", comment: ""))
-    var windowlessAppIndicator = WindowlessAppIndicator(tooltip: ThumbnailView.noOpenWindowToolTip)
+    var quitIcon = TrafficLightButton(.quit, Preferences.showTooltips ? NSLocalizedString("Quit app", comment: "") : nil)
+    var closeIcon = TrafficLightButton(.close, Preferences.showTooltips ? NSLocalizedString("Close window", comment: "") : nil)
+    var minimizeIcon = TrafficLightButton(.miniaturize, Preferences.showTooltips ? NSLocalizedString("Minimize/Deminimize window", comment: "") : nil)
+    var maximizeIcon = TrafficLightButton(.fullscreen, Preferences.showTooltips ? NSLocalizedString("Fullscreen/Defullscreen window", comment: "") : nil)
+    var windowlessAppIndicator = WindowlessAppIndicator(tooltip: Preferences.showTooltips ? ThumbnailView.noOpenWindowToolTip : nil)
 
     let hStackView = FlippedView()
     let vStackView = FlippedView()
@@ -126,7 +126,7 @@ class ThumbnailView: FlippedView {
         updateValues(element, index, newHeight)
         updateSizes(newHeight)
         updatePositions(newHeight)
-        label.toolTip = label.cell!.cellSize.width >= label.frame.size.width ? label.stringValue : nil
+        label.toolTip = Preferences.showTooltips && label.cell!.cellSize.width >= label.frame.size.width ? label.stringValue : nil
     }
 
     func drawHighlight() {
@@ -188,7 +188,7 @@ class ThumbnailView: FlippedView {
         windowlessIcon.shadow = shadow
         appIcon.shadow = shadow
         windowlessIcon.translatesAutoresizingMaskIntoConstraints = false
-        windowlessIcon.toolTip = ThumbnailView.noOpenWindowToolTip
+        windowlessIcon.toolTip = Preferences.showTooltips ? ThumbnailView.noOpenWindowToolTip : nil
         appIcon.translatesAutoresizingMaskIntoConstraints = false
         appIcon.setSubviewAbove(dockLabelIcon)
         label.fixHeight()
@@ -317,7 +317,7 @@ class ThumbnailView: FlippedView {
         let yPosition = view.hStackView.frame.origin.y + view.hStackView.frame.height + Appearance.intraCellPadding * 2
         view.label.frame = NSRect(x: xPosition, y: yPosition, width: effectiveLabelWidth, height: height)
         view.label.setWidth(effectiveLabelWidth)
-        view.label.toolTip = view.label.cell!.cellSize.width >= view.label.frame.size.width ? view.label.stringValue : nil
+        view.label.toolTip = Preferences.showTooltips && view.label.cell!.cellSize.width >= view.label.frame.size.width ? view.label.stringValue : nil
     }
 
     private func updateAppIcon(_ element: Window, _ title: String) {
@@ -361,10 +361,10 @@ class ThumbnailView: FlippedView {
             let spaceIndex = element.spaceIndexes.first
             if element.isOnAllSpaces || (spaceIndex != nil && spaceIndex! > 30) {
                 spaceIcon.setStar()
-                spaceIcon.toolTip = NSLocalizedString("Window is on every Space", comment: "")
+                spaceIcon.toolTip = Preferences.showTooltips ? NSLocalizedString("Window is on every Space", comment: "") : nil
             } else if let spaceIndex {
                 spaceIcon.setNumber(spaceIndex, false)
-                spaceIcon.toolTip = String(format: NSLocalizedString("Window is on Space %d", comment: ""), spaceIndex)
+                spaceIcon.toolTip = Preferences.showTooltips ? String(format: NSLocalizedString("Window is on Space %d", comment: ""), spaceIndex) : nil
             }
         }
         updateAppIcon(element, title)

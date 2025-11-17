@@ -6,6 +6,7 @@ class ThumbnailsView: NSVisualEffectView {
     var rows = [[ThumbnailView]]()
     static var thumbnailsWidth = CGFloat(0.0)
     static var thumbnailsHeight = CGFloat(0.0)
+    static var lastValidWidth = CGFloat(0.0) // Store the width when windows are visible
 
     convenience init() {
         self.init(frame: .zero)
@@ -37,6 +38,8 @@ class ThumbnailsView: NSVisualEffectView {
         if view.frame != NSRect.zero {
             view.drawHighlight()
         }
+        // Update preview when selection changes
+        App.app.thumbnailsPanel?.updatePreview()
     }
 
     /// using layer!.cornerRadius works but the corners are aliased; this custom approach gives smooth rounded corners
@@ -118,6 +121,7 @@ class ThumbnailsView: NSVisualEffectView {
                 }
             }
             highlightStartView()
+            App.app.thumbnailsPanel?.updatePreview()
         }
     }
 
@@ -180,8 +184,20 @@ class ThumbnailsView: NSVisualEffectView {
 
     private func layoutParentViews(_ maxX: CGFloat, _ widthMax: CGFloat, _ maxY: CGFloat, _ labelHeight: CGFloat) {
         let heightMax = ThumbnailsPanel.maxThumbnailsHeight()
-        ThumbnailsView.thumbnailsWidth = min(maxX, widthMax)
+
+        // Check if there are any visible windows
+        let hasVisibleWindows = Windows.list.contains { $0.shouldShowTheUser }
+
+        if hasVisibleWindows {
+            // Store the actual width when windows are visible
+            ThumbnailsView.lastValidWidth = maxX
+            ThumbnailsView.thumbnailsWidth = maxX
+        } else {
+            // Use the last valid width to maintain panel size when no windows match
+            ThumbnailsView.thumbnailsWidth = ThumbnailsView.lastValidWidth > 0 ? ThumbnailsView.lastValidWidth : maxX
+        }
         ThumbnailsView.thumbnailsHeight = min(maxY, heightMax)
+
         let frameWidth = ThumbnailsView.thumbnailsWidth + Appearance.windowPadding * 2
         var frameHeight = ThumbnailsView.thumbnailsHeight + Appearance.windowPadding * 2
         let originX = Appearance.windowPadding
@@ -192,7 +208,9 @@ class ThumbnailsView: NSVisualEffectView {
             originY = originY - Appearance.intraCellPadding - labelHeight
         }
         frame.size = NSSize(width: frameWidth, height: frameHeight)
-        scrollView.frame.size = NSSize(width: min(maxX, widthMax), height: min(maxY, heightMax))
+        // Extend scrollView width to accommodate scrollbar (reducing right padding)
+        let scrollBarWidth: CGFloat = 15
+        scrollView.frame.size = NSSize(width: maxX + scrollBarWidth, height: min(maxY, heightMax))
         scrollView.frame.origin = CGPoint(x: originX, y: originY)
         scrollView.contentView.frame.size = scrollView.frame.size
         if App.shared.userInterfaceLayoutDirection == .rightToLeft {
@@ -242,6 +260,7 @@ class ThumbnailsView: NSVisualEffectView {
             }
         }
     }
+
 }
 
 class ScrollView: NSScrollView {

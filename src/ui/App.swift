@@ -68,6 +68,7 @@ class App: AppCenterApplication {
         isFirstSummon = true
         forceDoNothingOnRelease = false
         MouseEvents.toggle(false)
+        thumbnailsPanel.clearSearchField()
         hideThumbnailPanelWithoutChangingKeyWindow()
         if !keepPreview {
             previewPanel.orderOut(nil)
@@ -88,6 +89,7 @@ class App: AppCenterApplication {
     func hideThumbnailPanelWithoutChangingKeyWindow() {
         preferencesWindow.canBecomeKey_ = false
         feedbackWindow.canBecomeKey_ = false
+        thumbnailsPanel.previewWindow?.orderOut(nil)
         thumbnailsPanel.orderOut(nil)
         preferencesWindow.canBecomeKey_ = true
         feedbackWindow.canBecomeKey_ = true
@@ -117,6 +119,7 @@ class App: AppCenterApplication {
         guard appIsBeingUsed else { return } // already hidden
         let focusedWindow = Windows.focusedWindow()
         Logger.info(focusedWindow?.debugId)
+        thumbnailsPanel.clearSearchField()
         focusSelectedWindow(focusedWindow)
     }
 
@@ -199,9 +202,11 @@ class App: AppCenterApplication {
     }
 
     func refreshOpenUi(_ windowsToScreenshot: [Window], _ source: RefreshCausedBy) {
+        // Load thumbnails if: not hiding them, OR preview is enabled, OR in Titles mode (for side preview)
+        let shouldLoadThumbnails = !Appearance.hideThumbnails || Preferences.previewFocusedWindow || Preferences.appearanceStyle == .titles
         if !windowsToScreenshot.isEmpty && SystemPermissions.screenRecordingPermission == .granted
                && !Preferences.onlyShowApplications()
-               && (!Appearance.hideThumbnails || Preferences.previewFocusedWindow) {
+               && shouldLoadThumbnails {
             Windows.refreshThumbnails(windowsToScreenshot, source)
             if source == .refreshOnlyThumbnailsAfterShowUi { return }
         }
@@ -214,10 +219,7 @@ class App: AppCenterApplication {
         guard appIsBeingUsed else { return }
         thumbnailsPanel.thumbnailsView.updateItemsAndLayout()
         guard appIsBeingUsed else { return }
-        thumbnailsPanel.setContentSize(thumbnailsPanel.thumbnailsView.frame.size)
-        thumbnailsPanel.display()
-        guard appIsBeingUsed else { return }
-        NSScreen.preferred.repositionPanel(thumbnailsPanel)
+        thumbnailsPanel.updateLayout()
         guard appIsBeingUsed else { return }
         Windows.voiceOverWindow() // at this point ThumbnailViews are assigned to the window, and ready
         guard appIsBeingUsed else { return }
