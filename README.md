@@ -1,68 +1,45 @@
-# AltTab
+# AltTab (but modded by @maddada to add more features and fix ultrawide/huge screens compatibility)
 
-[![Screenshot](docs/public/demo/frontpage.jpg)](docs/public/demo/frontpage.jpg)
-
-**AltTab** brings the power of Windows alt-tab to macOS
+Latest update: 2025-11-08 - Synced with original repo v7.31.0
 
 Now with more advanced features which were removed from the original project.
 
 [Find out more on the official website](https://alt-tab-macos.netlify.app/)
 
-## Features added compared to the original project:
-- Ability to set the max width and height with a slider
-- Ability to offset the dialog vertically with a slider
-- Ability to show the preview window when using the Titles style
+## Why the fork:
+- I really like AltTab but found it missing a bunch of settings that I needed to be able to use it with my 55" screen [#1].
+- Those missing settings that I added are:
+  - Sliders to set: Width, Max Height, and Vertical positioning of the panel
+  - Saving different settings for different monitors based on resolution (I want alt tab to look different on my macbook screen)
+  - Added easy instant search with keyboard controls to go to different windows (just start typing)
+  - Disable the useless tooltips
 
-Will try to keep it in sync with the original project.
+Huge thank you to [lwouis](https://github.com/lwouis) for making this awesome app. Hope these settings can be added to the original app so I don't need to keep this fork.
 
-## If you have access to Claude 4.5 Sonnet or a newer model you can just write this prompt to build the project and make the app work:
+I'll keep this fork synced with the original repo since I'm using it personally.
 
-    ```
-    I want to run this project in dev mode so I can add features to it.
-    Reference the README.md file and the Contributing.md files to achieve this.
-    ```
+## How to install this app:
+Keep in mind that the only way to use it is to install XCode and then build it locally on your machine, ask in the issues if you want detailed instructions or just ask Claude.
 
-## Building the Project
+<img width="1531" height="697" alt="2025-11-09_CleanShot_00-59-41" src="https://github.com/user-attachments/assets/3f050e30-8d49-4772-ac30-d61287621969" />
 
-### Prerequisites
-- Xcode (with macOS SDK)
-- CocoaPods (already set up in this project)
+<img width="1368" height="912" alt="2025-11-07_AltTab_11-31-40" src="https://github.com/user-attachments/assets/e6b1d34b-e627-4c0a-ae4b-cc69b5197507" />
 
-### Setup for Development
-
-1. **Set up local code signing** (avoids re-checking Security & Privacy permissions on every build):
-   ```bash
-   scripts/codesign/setup_local.sh
-   ```
-
-   It will ask you for the password to the computer to run the script, select allow always and write the password then accept.
-
-2. **Install npm dependencies** (optional, for pre-commit hooks):
-   ```bash
-   npm install
-   ```
-
-3. **Open the project in Xcode**:
-   ```bash
-   open alt-tab-macos.xcworkspace
-   ```
-
-4. **Build and run**:
-   - Select the **Debug** scheme in Xcode
-   - Press `Cmd+R` to build and run
-   - The built app is located at: `~/Library/Developer/Xcode/DerivedData/alt-tab-macos-*/Build/Products/Debug/AltTab.app`
-
-### Building from Command Line
-
-```bash
-xcodebuild -workspace alt-tab-macos.xcworkspace -scheme Debug -configuration Debug build
-```
-
-For more detailed information about contributing, see [docs/Contributing.md](docs/Contributing.md).
+<br/>
+<br/>
 
 <div style="text-align:center; float:right;">
-  <p>Project supported by</p>
+  <p>The original project is supported by</p>
   <a href="https://jb.gg/OpenSource">
     <img src="docs/public/demo/jetbrains.svg" alt="Jetbrains" width="149" height="32">
   </a>
 </div>
+
+<br/>
+<br/>
+
+#1: Why use a 55" TV as my main monitor:
+- I find this nicer than having 2 ultrawide monitors on top of each other because I can make windows have more height.
+- S90C 144hz is cheaper and brighter than any other OLED super ultrawide monitor.
+- It makes me set the screen further away which is healthier.
+- Can be used as a TV when necessary since I have it on a wheels stand.
